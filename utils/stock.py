@@ -138,9 +138,12 @@ def get_stock_dividends(symbol):
         print(f"Error fetching dividends for {symbol}: {e}")
         return []
 #-------stock predictor --------#
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+model_path=os.path.join(CURRENT_DIR, "stock_xgb.joblib")
 try:
-  model=joblib.load("stock_xgb.joblib")
-  print("Imported")
+    if os.path.exists(model_path):
+      model=joblib.load(model_path)
+      print("imported")
 except:
     model=None
     print("Not imported")
