@@ -144,7 +144,8 @@ def predict_stock(symbol):
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
       return {"error": "Invalid stock symbol format"}
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    model_path=os.path.join(CURRENT_DIR, "stock_xgb.joblib")
+    PARENT_DIR = os.path.dirname(CURRENT_DIR)
+    model_path=os.path.join(PARENT_DIR, "stock_xgb.joblib")
     try:
         if os.path.exists(model_path):
             model=joblib.load(model_path)
@@ -152,11 +153,13 @@ def predict_stock(symbol):
     except:
         model=None
         print("Not imported")
-    if hist.empty and "." not in symbol:
-            symbol = symbol + ".NS"
     
     ticker = yf.Ticker(symbol)
     df = ticker.history(period="60d", interval="1d")
+    if df.empty and "." not in symbol:
+        symbol = symbol + ".NS"
+        ticker = yf.Ticker(symbol)
+        df = ticker.history(period="60d", interval="1d")
     if df.empty:
         raise ValueError(f"History coukd not be found for {symbol}")
     df=df.reset_index()
