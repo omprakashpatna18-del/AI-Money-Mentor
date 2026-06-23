@@ -79,7 +79,7 @@ def get_stock_price(symbol):
                 news_data = news
         except Exception:
             pass
-        predicted_tomorrow = predict_stock(symbol)
+        predicted_tomorrow = predict_stock(symbol,hist)
 
         ret = {
             "symbol": symbol,
@@ -139,7 +139,7 @@ def get_stock_dividends(symbol):
         return []
 #-------stock predictor --------#
 
-def predict_stock(symbol):
+def predict_stock(symbol, existing_df=None):
     symbol = symbol.strip().upper().replace("$", "")
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
       return {"error": "Invalid stock symbol format"}
@@ -152,13 +152,15 @@ def predict_stock(symbol):
     except Exception as e:
         model=None
         print(f"Not imported {e}")
-    
-    ticker = yf.Ticker(symbol)
-    df = ticker.history(period="60d", interval="1d")
-    if df.empty and "." not in symbol:
-        symbol = symbol + ".NS"
+    if existing_df is not None and not existing_df.empty:
+        df = existing_df.copy()
+    else:
         ticker = yf.Ticker(symbol)
         df = ticker.history(period="60d", interval="1d")
+        if df.empty and "." not in symbol:
+            symbol = symbol + ".NS"
+            ticker = yf.Ticker(symbol)
+            df = ticker.history(period="60d", interval="1d")
     if df.empty:
         raise ValueError(f"History could not be found for {symbol}")
     df=df.reset_index()
