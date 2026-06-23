@@ -144,8 +144,7 @@ def predict_stock(symbol):
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
       return {"error": "Invalid stock symbol format"}
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    PARENT_DIR = os.path.dirname(CURRENT_DIR)
-    model_path=os.path.join(PARENT_DIR, "stock_xgb.joblib")
+    model_path = os.path.join(CURRENT_DIR, "stock_xgb.joblib")
     try:
         if os.path.exists(model_path):
             model=joblib.load(model_path)
