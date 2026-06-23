@@ -140,7 +140,7 @@ def get_stock_dividends(symbol):
 #-------stock predictor --------#
 
 def predict_stock(symbol):
-    symbol = symbol.strip().upper()
+    symbol = symbol.strip().upper().replace("$", "")
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
       return {"error": "Invalid stock symbol format"}
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -149,9 +149,9 @@ def predict_stock(symbol):
         if os.path.exists(model_path):
             model=joblib.load(model_path)
             print("imported")
-    except:
+    except Exception as e:
         model=None
-        print("Not imported")
+        print(f"Not imported {e}")
     
     ticker = yf.Ticker(symbol)
     df = ticker.history(period="60d", interval="1d")
@@ -160,7 +160,7 @@ def predict_stock(symbol):
         ticker = yf.Ticker(symbol)
         df = ticker.history(period="60d", interval="1d")
     if df.empty:
-        raise ValueError(f"History coukd not be found for {symbol}")
+        raise ValueError(f"History could not be found for {symbol}")
     df=df.reset_index()
     df["SMA_7"] = df["Close"].rolling(window=7).mean()
     df["SMA_30"] = df["Close"].rolling(window=30).mean()
