@@ -11,15 +11,6 @@ CACHE_EXPIRY = 600  # 10 minutes in seconds
 DIVIDEND_CACHE = {}
 DIVIDEND_CACHE_EXPIRY = 3600  # 1 hour in seconds
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-model_path=os.path.join(CURRENT_DIR, "stock_xgb.joblib")
-try:
-    if os.path.exists(model_path):
-      model=joblib.load(model_path)
-      print("imported")
-except:
-    model=None
-    print("Not imported")
 
 def get_stock_price(symbol):
     try:
@@ -152,6 +143,17 @@ def predict_stock(symbol):
     symbol = symbol.strip().upper()
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
       return {"error": "Invalid stock symbol format"}
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    model_path=os.path.join(CURRENT_DIR, "stock_xgb.joblib")
+    try:
+        if os.path.exists(model_path):
+            model=joblib.load(model_path)
+            print("imported")
+    except:
+        model=None
+        print("Not imported")
+    if hist.empty and "." not in symbol:
+            symbol = symbol + ".NS"
     
     ticker = yf.Ticker(symbol)
     df = ticker.history(period="60d", interval="1d")
