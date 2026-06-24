@@ -4,7 +4,7 @@ import re
 import time
 import pandas as pd
 import os
-import joblib
+
 
 STOCK_CACHE = {}
 CACHE_EXPIRY = 600  # 10 minutes in seconds
