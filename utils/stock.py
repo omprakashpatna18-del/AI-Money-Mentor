@@ -80,12 +80,8 @@ def get_stock_price(symbol):
         except Exception:
             pass
             
-        try:
-            native_currency = stock.info.get("currency", "USD")
-        except Exception:
-            native_currency = "INR" if symbol.endswith(".NS") else "USD"
         
-        predicted_tomorrow = predict_stock(symbol,native_currency,hist)
+        predicted_tomorrow = predict_stock(symbol)
 
         ret = {
             "symbol": symbol,
@@ -145,48 +141,21 @@ def get_stock_dividends(symbol):
         print(f"Error fetching dividends for {symbol}: {e}")
         return []
 #-------stock predictor --------#
-EXCHANGE_CONVERSION_INDEX = {
-        "INR": 94.50,  # Indian Rupee to USD Conversion Base Scale
-        "RUB": 74.50,  # Russian Ruble to USD Conversion Base Scale
-        "EUR": 0.88,   # Euro Baseline
-        "GBP": 0.76,   # British Pound Baseline
-        "USD": 1.0     # Reference baseline scale 
-}
 
 def predict_stock(symbol, native_currency,existing_df=None):
     
     symbol = symbol.strip().upper().replace("$", "")
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
       return {"error": "Invalid stock symbol format"}
-        
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(CURRENT_DIR, "stock_xgb.joblib")
-    try:
-        if os.path.exists(model_path):
-            model=joblib.load(model_path)
-            print("imported")
-    except Exception as e:
-        model=None
-        print(f"Not imported {e}")
-        
-    if existing_df is not None and not existing_df.empty:
-        df = existing_df.copy()
-    else:
+    ticker = yf.Ticker(symbol)
+    df = ticker.history(period="60d", interval="1d")
+    if df.empty and "." not in symbol:
+        symbol = symbol + ".NS"
         ticker = yf.Ticker(symbol)
         df = ticker.history(period="60d", interval="1d")
-        if df.empty and "." not in symbol:
-            symbol = symbol + ".NS"
-            ticker = yf.Ticker(symbol)
-            df = ticker.history(period="60d", interval="1d")
             
     if df.empty:
         raise ValueError(f"History could not be found for {symbol}")
-        
-    rate = EXCHANGE_CONVERSION_INDEX.get(native_currency, 1.0)
-    if rate != 1.0:
-        df["Close"]=df["Close"]/rate
-        df["High"] = df["High"] / rate
-        df["Low"] = df["Low"] / rate
       
     df=df.reset_index()
     df["SMA_7"] = df["Close"].rolling(window=7).mean()
@@ -206,22 +175,40 @@ def predict_stock(symbol, native_currency,existing_df=None):
     df["Sentiment_Score"]=0.0
     latest_data=df.iloc[-1]
     today_close=latest_data["Close"]
-    feature_columns = [
-        "SMA_7",
-        "SMA_30",
-        "EMA_12",
-        "EMA_26",
-        "RSI",
-        "MACD",
-        "Bollinger_Upper",
-        "Bollinger_Lower",
-        "Sentiment_Score",
-    ]
-    X_live = pd.DataFrame([latest_data[feature_columns]])
+
+    #-----rules------#
+    score=0
+    if df["SMA_7"]>df["SMA_30"]:
+        score+=1
+    else:
+        score-=1
+        
+    if df["RSI"]<30:
+        score+=1
+    elif df["RSI"]>70:
+        score-=1
+
+    if df["MACD"]>0:
+        score+=1
+    else:
+        score-=1
+
+    if df["Bollinger_Upper"]<df["Close"]:
+        score-=1
+    elif df["Bollinger_Lower"]>df["Close"]:
+        score+=1
+
+    if df["EMA_12"]>df["EMA_26"]:
+        score+=1
+    else:
+        score-=1
+
+    signal=score/5
+    MAX_BOUND=0.05
     try:
-      predicted_return=model.predict(X_live)[0]
-      predicted_tomorrow_price = float(today_close * (1 + predicted_return))*rate
-      print(predicted_return)
+        predicted_return = signal_score*MAX_BOUND
+        predicted_tomorrow_price = float(today_close*(1+predicted_return))
+        print(predicted_return)
     except Exception as e:
         print(f"There is some error:{e}")
         predicted_tomorrow_price=0
