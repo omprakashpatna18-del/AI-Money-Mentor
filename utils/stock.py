@@ -1,3 +1,4 @@
+
 import yfinance as yf
 import re
 import time
@@ -142,7 +143,7 @@ def get_stock_dividends(symbol):
         return []
 #-------stock predictor --------#
 
-def predict_stock(symbol, native_currency,existing_df=None):
+def predict_stock(symbol):
     
     symbol = symbol.strip().upper().replace("$", "")
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
@@ -178,27 +179,27 @@ def predict_stock(symbol, native_currency,existing_df=None):
 
     #-----rules------#
     score=0
-    if df["SMA_7"]>df["SMA_30"]:
+    if latest_data["SMA_7"]>latest_data["SMA_30"]:
         score+=1
     else:
         score-=1
         
-    if df["RSI"]<30:
+    if latest_data["RSI"]<30:
         score+=1
-    elif df["RSI"]>70:
+    elif latest_data["RSI"]>70:
         score-=1
 
-    if df["MACD"]>0:
+    if latest_data["MACD"]>0:
         score+=1
     else:
         score-=1
 
-    if df["Bollinger_Upper"]<df["Close"]:
+    if latest_data["Bollinger_Upper"]<latest_data["Close"]:
         score-=1
-    elif df["Bollinger_Lower"]>df["Close"]:
+    elif latest_data["Bollinger_Lower"]>latest_data["Close"]:
         score+=1
 
-    if df["EMA_12"]>df["EMA_26"]:
+    if latest_data["EMA_12"]>latest_data["EMA_26"]:
         score+=1
     else:
         score-=1
@@ -206,7 +207,7 @@ def predict_stock(symbol, native_currency,existing_df=None):
     signal=score/5
     MAX_BOUND=0.05
     try:
-        predicted_return = signal_score*MAX_BOUND
+        predicted_return = signal*MAX_BOUND
         predicted_tomorrow_price = float(today_close*(1+predicted_return))
         print(predicted_return)
     except Exception as e:
