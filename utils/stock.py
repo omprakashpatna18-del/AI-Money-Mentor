@@ -197,6 +197,7 @@ def predict_stock(symbol, existing_df=None):
     try:
       predicted_return=model.predict(X_live)[0]
       predicted_tomorrow_price = float(today_close * (1 + predicted_return))
+      print(predicted_return)
     except Exception as e:
         print(f"There is some error:{e}")
         predicted_tomorrow_price=0
