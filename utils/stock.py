@@ -29,13 +29,13 @@ def get_stock_price(symbol):
 
         # Try finding as is first (especially for global stocks like AAPL, MSFT)
         stock = yf.Ticker(symbol)
-        hist = stock.history(period="30d")
+        hist = stock.history(period="60d")
 
         # If empty and no dot in symbol, try appending .NS for Indian stocks
         if hist.empty and "." not in symbol:
             symbol_ns = symbol + ".NS"
             stock = yf.Ticker(symbol_ns)
-            hist = stock.history(period="30d")
+            hist = stock.history(period="60d")
             if not hist.empty:
                 symbol = symbol_ns
 
