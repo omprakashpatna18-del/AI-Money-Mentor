@@ -79,7 +79,13 @@ def get_stock_price(symbol):
                 news_data = news
         except Exception:
             pass
-        predicted_tomorrow = predict_stock(symbol,hist)
+            
+        try:
+            native_currency = stock.info.get("currency", "USD")
+        except Exception:
+            native_currency = "INR" if symbol.endswith(".NS") else "USD"
+        
+        predicted_tomorrow = predict_stock(symbol,hist,native_currency)
 
         ret = {
             "symbol": symbol,
@@ -139,11 +145,20 @@ def get_stock_dividends(symbol):
         print(f"Error fetching dividends for {symbol}: {e}")
         return []
 #-------stock predictor --------#
+EXCHANGE_CONVERSION_INDEX = {
+        "INR": 94.50,  # Indian Rupee to USD Conversion Base Scale
+        "RUB": 74.50,  # Russian Ruble to USD Conversion Base Scale
+        "EUR": 0.88,   # Euro Baseline
+        "GBP": 0.76,   # British Pound Baseline
+        "USD": 1.0     # Reference baseline scale 
+}
 
-def predict_stock(symbol, existing_df=None):
+def predict_stock(symbol, existing_df=None,native_currency):
+    
     symbol = symbol.strip().upper().replace("$", "")
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
       return {"error": "Invalid stock symbol format"}
+        
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
     model_path = os.path.join(CURRENT_DIR, "stock_xgb.joblib")
     try:
@@ -153,6 +168,7 @@ def predict_stock(symbol, existing_df=None):
     except Exception as e:
         model=None
         print(f"Not imported {e}")
+        
     if existing_df is not None and not existing_df.empty:
         df = existing_df.copy()
     else:
@@ -162,8 +178,14 @@ def predict_stock(symbol, existing_df=None):
             symbol = symbol + ".NS"
             ticker = yf.Ticker(symbol)
             df = ticker.history(period="60d", interval="1d")
+            
     if df.empty:
         raise ValueError(f"History could not be found for {symbol}")
+        
+    rate = EXCHANGE_CONVERSION_INDEX.get(native_currency, 1.0)
+    if rate != 1.0:
+        df["Close"]=df["Close"]/rate
+      
     df=df.reset_index()
     df["SMA_7"] = df["Close"].rolling(window=7).mean()
     df["SMA_30"] = df["Close"].rolling(window=30).mean()
@@ -196,8 +218,8 @@ def predict_stock(symbol, existing_df=None):
     X_live = pd.DataFrame([latest_data[feature_columns]])
     try:
       predicted_return=model.predict(X_live)[0]
-      predicted_tomorrow_price = float(today_close * (1 + predicted_return))
-      print(predicted_return)
+      predicted_tomorrow_price = float(today_close * (1 + predicted_return))*rate
+      print(predicted_return*rate)
     except Exception as e:
         print(f"There is some error:{e}")
         predicted_tomorrow_price=0
