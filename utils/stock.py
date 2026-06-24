@@ -85,7 +85,7 @@ def get_stock_price(symbol):
         except Exception:
             native_currency = "INR" if symbol.endswith(".NS") else "USD"
         
-        predicted_tomorrow = predict_stock(symbol,hist,native_currency)
+        predicted_tomorrow = predict_stock(symbol,native_currency,hist)
 
         ret = {
             "symbol": symbol,
@@ -153,7 +153,7 @@ EXCHANGE_CONVERSION_INDEX = {
         "USD": 1.0     # Reference baseline scale 
 }
 
-def predict_stock(symbol, existing_df=None,native_currency):
+def predict_stock(symbol, native_currency,existing_df=None):
     
     symbol = symbol.strip().upper().replace("$", "")
     if not symbol or not re.match(r"^[A-Z0-9.\-_]+$", symbol):
@@ -185,6 +185,8 @@ def predict_stock(symbol, existing_df=None,native_currency):
     rate = EXCHANGE_CONVERSION_INDEX.get(native_currency, 1.0)
     if rate != 1.0:
         df["Close"]=df["Close"]/rate
+        df["High"] = df["High"] / rate
+        df["Low"] = df["Low"] / rate
       
     df=df.reset_index()
     df["SMA_7"] = df["Close"].rolling(window=7).mean()
@@ -219,7 +221,7 @@ def predict_stock(symbol, existing_df=None,native_currency):
     try:
       predicted_return=model.predict(X_live)[0]
       predicted_tomorrow_price = float(today_close * (1 + predicted_return))*rate
-      print(predicted_return*rate)
+      print(predicted_return)
     except Exception as e:
         print(f"There is some error:{e}")
         predicted_tomorrow_price=0
