@@ -321,7 +321,7 @@
                 grid: { color: 'rgba(255, 255, 255, 0.05)' },
                 ticks: {
                   color: '#5a6a82',
-                  callback: function (value) { return '₹' + fmtNum(value); }
+                  callback: function (value) { return curSign + fmtNum(value); }
                 }
               }
             }
