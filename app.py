@@ -1229,10 +1229,7 @@ def get_sync_status():
 
     return jsonify({'error': str(e)}), 500  
 
-    })    
-
-    return jsonify({'error': str(e)}), 500  
-
+    
 
 
 
