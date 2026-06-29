@@ -881,9 +881,10 @@ def parse_document():
             result = document_parser.extract_from_pdf(tmp_path)
         else:
             result = {'success': False, 'error': f'Unsupported file type: {file_ext}'}
+        return jsonify(result)
             
     except Exception as e:
-        return jsonify({'success': False, 'error':f'{e}')
+        return jsonify({'success': False, 'error':f'{e}'})
         # Clean up
 
 def transcribe_voice():
