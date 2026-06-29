@@ -2242,8 +2242,6 @@ def get_sync_status():
         return jsonify({'error': str(e)}), 500
 
 
-        return jsonify({'error': str(e)}), 500 })    
-
 
 
 # ---------------- PORTFOLIO OPTIMIZER ----------------
@@ -5249,7 +5247,7 @@ def parse_expense_text():
 
         prompt = f"""
         You are a financial data extractor. Extract the following details from this spoken text:
-        "{text}"
+        {text}
         
         Return ONLY valid JSON in this exact format:
         {{
@@ -5266,7 +5264,6 @@ def parse_expense_text():
         - "Paid electricity bill 800 rupees" → {{"amount": 800, "category": "Utilities", "merchant": null}}
 
         """
-        '''
 
 
         response = client.chat.completions.create(
