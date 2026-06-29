@@ -2534,7 +2534,6 @@ def get_sync_status():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    })    
 
 
 
