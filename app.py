@@ -1851,9 +1851,6 @@ def predictive_alerts_page():
 def train_predictor():
     try:
 
-def train_predictor():
-    try:
-
         expenses = Expense.query.filter_by(user_id=current_user.id).all()
         transactions = [{'date': e.date, 'amount': e.amount, 'category': e.category} for e in expenses]
         if len(transactions) < 30:
@@ -1923,9 +1920,6 @@ def detect_anomalies():
 @app.route('/api/predict/status', methods=['GET'])
 @login_required
 def predictor_status():
-
-    return jsonify({'is_trained': predictor.is_trained, 'model_dir': predictor.model_dir})
-
     """Get predictor status"""
     return jsonify({
         'is_trained': predictor.is_trained,
@@ -2023,43 +2017,6 @@ def analyze_rebalance():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ---------------- FIRE PLANNER ----------------
-@app.route('/fire-planner')
-@login_required
-
-@login_required
-def rebalancer_page():
-    return render_template('rebalancer.html', active_page='rebalancer')
-
-
-@app.route('/api/rebalance/analyze', methods=['POST'])
-@login_required
-def analyze_rebalance():
-    try:
-        data = request.json
-        holdings = data.get('holdings', [])
-        target = data.get('target', {})
-        if not holdings:
-            return jsonify({'error': 'No holdings provided'}), 400
-        rebalancer = AutoRebalancer(holdings, target)
-        current_allocation = rebalancer.get_current_allocation()
-        rebalance = rebalancer.generate_rebalance_trades()
-        market_signals = {}
-        for h in holdings:
-            signal = rebalancer.get_market_signal(h['symbol'])
-            market_signals[h['symbol']] = signal
-        tax_harvesting = rebalancer.get_tax_harvesting_opportunities()
-        return jsonify({
-            'success': True,
-            'current_allocation': current_allocation,
-            'rebalance': rebalance,
-            'market_signals': market_signals,
-            'tax_harvesting': tax_harvesting
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
 
 # ---------------- AUTO REBALANCER ----------------
 @app.route('/rebalancer')
@@ -2149,59 +2106,49 @@ def fire_quick():
         return jsonify({'error': str(e)}), 500
 
 
-
-
-        return jsonify({'error': str(e)}), 500
-
-        return jsonify({'error': str(e)}), 500 
-
-
-      ]
-
-
         # ---------------- SCENARIO PLANNER ----------------
-        @app.route('/scenarios')
-        @login_required
-        def scenarios_page():
-            return render_template('scenarios.html', active_page='scenarios')
+@app.route('/scenarios')
+@login_required
+def scenarios_page():
+    return render_template('scenarios.html', active_page='scenarios')
 
-        @app.route('/api/scenario/base', methods=['GET'])
-        @login_required
-        def get_base_snapshot():
-            snapshot = get_user_snapshot(current_user.id)
-            return jsonify({'success': True, 'snapshot': snapshot})
+@app.route('/api/scenario/base', methods=['GET'])
+@login_required
+def get_base_snapshot():
+    snapshot = get_user_snapshot(current_user.id)
+    return jsonify({'success': True, 'snapshot': snapshot})
 
-        @app.route('/api/scenario/job_change', methods=['POST'])
-        @login_required
-        def scenario_job_change():
-            data = request.json
-            percent = data.get('salary_delta', 0)
-            snapshot = get_user_snapshot(current_user.id)
-            updated = job_change(snapshot, percent)
-            projection = project_snapshot(updated)
-            return jsonify({'success': True, 'snapshot': updated, 'projection': projection})
+@app.route('/api/scenario/job_change', methods=['POST'])
+@login_required
+def scenario_job_change():
+    data = request.json
+    percent = data.get('salary_delta', 0)
+    snapshot = get_user_snapshot(current_user.id)
+    updated = job_change(snapshot, percent)
+    projection = project_snapshot(updated)
+    return jsonify({'success': True, 'snapshot': updated, 'projection': projection})
 
-        @app.route('/api/scenario/new_loan', methods=['POST'])
-        @login_required
-        def scenario_new_loan():
-            data = request.json
-            amount = float(data.get('amount', 0))
-            interest = float(data.get('interest', 0.07))
-            tenure = int(data.get('tenure_years', 15))
-            snapshot = get_user_snapshot(current_user.id)
-            updated = new_loan(snapshot, amount, interest, tenure)
-            projection = project_snapshot(updated)
-            return jsonify({'success': True, 'snapshot': updated, 'projection': projection})
+@app.route('/api/scenario/new_loan', methods=['POST'])
+@login_required
+def scenario_new_loan():
+    data = request.json
+    amount = float(data.get('amount', 0))
+    interest = float(data.get('interest', 0.07))
+    tenure = int(data.get('tenure_years', 15))
+    snapshot = get_user_snapshot(current_user.id)
+    updated = new_loan(snapshot, amount, interest, tenure)
+    projection = project_snapshot(updated)
+    return jsonify({'success': True, 'snapshot': updated, 'projection': projection})
 
-        @app.route('/api/scenario/add_child', methods=['POST'])
-        @login_required
-        def scenario_add_child():
-            data = request.json
-            annual_cost = float(data.get('annual_cost', 0))
-            snapshot = get_user_snapshot(current_user.id)
-            updated = add_child(snapshot, annual_cost)
-            projection = project_snapshot(updated)
-            return jsonify({'success': True, 'snapshot': updated, 'projection': projection})
+@app.route('/api/scenario/add_child', methods=['POST'])
+@login_required
+def scenario_add_child():
+    data = request.json
+    annual_cost = float(data.get('annual_cost', 0))
+    snapshot = get_user_snapshot(current_user.id)
+    updated = add_child(snapshot, annual_cost)
+    projection = project_snapshot(updated)
+    return jsonify({'success': True, 'snapshot': updated, 'projection': projection})
 
         # ---------------- BANK INTEGRATION ----------------
 from utils.bank_integration import BankIntegration
@@ -2295,15 +2242,8 @@ def get_sync_status():
         return jsonify({'error': str(e)}), 500
 
 
-        return jsonify({'error': str(e)}), 500  
+        return jsonify({'error': str(e)}), 500 })    
 
-
-    })    
-
-    return jsonify({'error': str(e)}), 500  
-
-
-  ]
 
 
 # ---------------- PORTFOLIO OPTIMIZER ----------------
@@ -2588,9 +2528,6 @@ def add_portfolio_holding():
     except ValidationError as e:
         return jsonify({"error": str(e)}), 400
 
-
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/bank/sync-status', methods=['GET'])
 @login_required
 def get_sync_status():
@@ -2599,17 +2536,8 @@ def get_sync_status():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-        return jsonify({'error': str(e)}), 500  
-
-
     })    
 
-    return jsonify({'error': str(e)}), 500  
-
-
-  ]
 
 
 # ---------------- PORTFOLIO OPTIMIZER ----------------
@@ -5336,31 +5264,23 @@ def parse_expense_text():
         - "Uber ride to airport 450 rupees" → {{"amount": 450, "category": "Travel", "merchant": "Uber"}}
         - "Bought groceries for 1200 at Big Basket" → {{"amount": 1200, "category": "Food", "merchant": "Big Basket"}}
         - "Paid electricity bill 800 rupees" → {{"amount": 800, "category": "Utilities", "merchant": null}}
+
         """
+        '''
 
 
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "You are a financial data extractor. Return only valid JSON."},
-                {"role": "user", "content": prompt}
-            ],
+                {"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=100
         )
 
 
         result_text = response.choices[0].message.content.strip()
-
-
-
-        result_text = response.choices[0].message.content.strip()
-
         
-
-        result_text = response.choices[0].message.content.strip()
-
-
         import json
         try:
             start = result_text.find('{')
