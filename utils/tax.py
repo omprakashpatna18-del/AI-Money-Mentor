@@ -46,7 +46,6 @@ def calculate_tax(income, deduction_80c=0.0, deduction_80d=0.0, deduction_hra=0.
     taxable_new = max(0.0, income - std_deduction_new)
     
     tax_new = 0.0
-      tax_new = 0.0
     # Slabs:
     # 0 - 4L: 0%
     # 4L - 8L: 5%
